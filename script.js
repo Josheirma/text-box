@@ -27,7 +27,7 @@ const CELL_W = 12;             // Width of each cell in pixels
 const CELL_H = 19;             // Height of each cell in pixels
 const CURSOR_H = 2;            // Height (thickness) of the underline cursor in pixels
 const CHAR_ABOVE_CURSOR = 1;   // Vertical offset to shift text up for better alignment above the cursor line
-const DASH = '';               // Character used to represent an empty cell (currently empty string)
+const DASH = ' ';               // Character used to represent an empty cell (currently empty string)
 
 // === State ===
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(DASH)); 
@@ -141,6 +141,7 @@ function insertChar(char) {
   shiftRight(cursor.row, cursor.col);
   grid[cursor.row][cursor.col] = char;
   moveCursor(1, 0);
+   moveRightWordToNextRowWhitespace()
 }
 
 
@@ -206,6 +207,7 @@ function deleteChar() {
   if (cursor.row === 0 && cursor.col === 0) return;
   moveCursor(-1, 0);
   shiftLeft(cursor.row, cursor.col);
+  moveRightWordToNextRowWhitespace() 
 }
 
 
@@ -267,58 +269,87 @@ function shiftLeft(row, col) {
   grid[lastR][lastC] = DASH;
 }
 
-//added to text box
+//added to text box///////////////////////////
 
-function moveWordDownIfPossible(grid, ROWS, COLS) {
-  // Helper to check if a character is a letter
+function moveRightWordToNextRowWhitespace() {
   const isLetter = ch => /^[a-zA-Z]$/.test(ch);
 
-  // Loop through each row except the last one
   for (let row = 0; row < ROWS - 1; row++) {
     let col = 0;
 
-    // Scan from left to right in the current row
+    // Step through each column of current row
     while (col < COLS) {
-      // Skip non-letter cells
+      // Skip over non-letter characters
       if (!isLetter(grid[row][col])) {
         col++;
         continue;
       }
 
-      // Found the start of a word
-      let startCol = col;
+      const startCol = col;
 
-      // Keep moving right as long as letters continue
+      // Find the end of the current consecutive letter word
       while (col < COLS && isLetter(grid[row][col])) {
         col++;
       }
 
-      // End column of the word is one before the current col
-      let endCol = col - 1;
-      let wordLen = endCol - startCol + 1;
+      const endCol = col - 1;
+      const wordLen = endCol - startCol + 1;
 
-      // Check if the word reaches the right edge
-      let wordTouchesRightEdge = (endCol === COLS - 1);
+      // === Check if the word qualifies for moving ===
+      const endsAtRightEdge = endCol === COLS - 1;
+      const isSingleAtEnd =
+        startCol === endCol &&
+        endCol === COLS - 1 &&
+        grid[row + 1][0] !== ' ';
 
-      // Or if it's a single character at the last column
-      let singleCharAtEnd = (startCol === endCol && endCol === COLS - 1);
-
-      // If it's a qualifying word
-      if (wordTouchesRightEdge || singleCharAtEnd) {
-        // Check if the next row starts with a letter (not empty)
-        if (isLetter(grid[row + 1][0])) {
-          // Move the word to the start of the next row
-          for (let i = 0; i < wordLen; i++) {
-            grid[row + 1][i] = grid[row][startCol + i]; // Copy to next row
-            grid[row][startCol + i] = '-'; // Replace with dashes above
-          }
-        }
-
-        // Once a word has been processed, stop scanning this row
-        break;
+      if (!endsAtRightEdge && !isSingleAtEnd) {
+        // Try next potential word
+        col = startCol + 1;
+        continue;
       }
 
-      // If the word does not meet the criteria, continue scanning from next col
+      // === Find where the leftmost block of non-space characters ends in the next row ===
+      let leftBlockEnd = 0;
+      while (leftBlockEnd < COLS && grid[row + 1][leftBlockEnd] !== ' ') {
+        leftBlockEnd++;
+      }
+
+      // === Count how many consecutive spaces follow that left block ===
+      let spaceCount = 0;
+      let spaceStart = leftBlockEnd;
+      while (
+        spaceStart + spaceCount < COLS &&
+        grid[row + 1][spaceStart + spaceCount] === ' '
+      ) {
+        spaceCount++;
+      }
+
+      // === Final checks before inserting ===
+      const nextRowStartsWithChar = grid[row + 1][0] !== ' ';
+      const canFit = wordLen <= spaceCount;
+      const insertCol = leftBlockEnd;
+
+      // Ensure the entire target region is spaces only
+      let allSpaces = true;
+      for (let i = 0; i < wordLen; i++) {
+        if (grid[row + 1][insertCol + i] !== ' ') {
+          allSpaces = false;
+          break;
+        }
+      }
+
+      if (nextRowStartsWithChar && canFit && allSpaces) {
+        // === Perform the move ===
+        for (let i = 0; i < wordLen; i++) {
+          grid[row + 1][insertCol + i] = grid[row][startCol + i]; // move down
+          console.log("1: ", grid[row][startCol + i])
+          grid[row][startCol + i] = ' '; // erase from original row
+        }
+      }
+
+      break; // Only move one word per row
     }
   }
 }
+
+//////////////////////
