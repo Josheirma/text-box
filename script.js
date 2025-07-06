@@ -100,7 +100,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'Backspace') deleteChar();
   else if (e.key === 'Delete') deleteChar();
   // All letter characters
-  else if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) insertChar(e.key); // Letters only
+  else if (e.key.length === 1 && /^[\x20-\x7E]$/.test(e.key)) insertChar(e.key); // Letters only
 
   drawGrid();
 });
@@ -272,7 +272,8 @@ function shiftLeft(row, col) {
 //added to text box///////////////////////////
 
 function moveRightWordToNextRowWhitespace() {
-  const isLetter = ch => /^[a-zA-Z]$/.test(ch);
+  //any character but space
+  const isLetter = ch => /^[\x21-\x7E]$/.test(ch);
 
   for (let row = 0; row < ROWS - 1; row++) {
     let col = 0;
