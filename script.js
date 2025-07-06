@@ -117,24 +117,46 @@ function moveCursor(dx, dy) {
   // dx: horizontal direction (-1 = left, 1 = right)
   // dy: vertical direction   (-1 = up,   1 = down)
 
-  // Handle horizontal movement
+  // === Horizontal Movement ===
   if (dx === -1) {
-    // If at the leftmost column, wrap to rightmost
-    cursor.col = cursor.col === 0 ? COLS - 1 : cursor.col - 1;
+    if (cursor.col === 0) {
+      if (cursor.row === 0) {
+        // Top-left corner: can't move left
+        return;
+      } else {
+        // Move left from start of row: go up and wrap to rightmost column
+        cursor.row -= 1;
+        cursor.col = COLS - 1;
+      }
+    } else {
+      cursor.col -= 1; // Normal left move
+    }
   } else if (dx === 1) {
-    // If at the rightmost column, wrap to leftmost
-    cursor.col = cursor.col === COLS - 1 ? 0 : cursor.col + 1;
+    const isLastCell = cursor.row === ROWS - 1 && cursor.col === COLS - 1;
+    if (isLastCell) {
+      // Bottom-right corner: can't move right
+      return;
+    } else if (cursor.col === COLS - 1) {
+      // Move right from end of row: go down and wrap to first column
+      cursor.row += 1;
+      cursor.col = 0;
+    } else {
+      cursor.col += 1; // Normal right move
+    }
   }
 
-  // Handle vertical movement
+  // === Vertical Movement ===
   if (dy === -1) {
-    // If at the top row, wrap to bottom row
+    // Move up with wrap
     cursor.row = cursor.row === 0 ? ROWS - 1 : cursor.row - 1;
   } else if (dy === 1) {
-    // If at the bottom row, wrap to top row
+    // Move down with wrap
     cursor.row = cursor.row === ROWS - 1 ? 0 : cursor.row + 1;
   }
 }
+
+
+
 
 
 function insertChar(char) {
