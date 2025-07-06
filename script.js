@@ -22,7 +22,7 @@ ctx.textAlign = 'center';
 
 // === Constants ===
 const COLS = 25;               // Number of columns in the grid (width)
-const ROWS = 25;               // Number of rows in the grid (height)
+let ROWS = 25;               // Number of rows in the grid (height)
 const CELL_W = 12;             // Width of each cell in pixels
 const CELL_H = 19;             // Height of each cell in pixels
 const CURSOR_H = 2;            // Height (thickness) of the underline cursor in pixels
@@ -160,10 +160,22 @@ function moveCursor(dx, dy) {
 
 
 function insertChar(char) {
+  
+  if (grid[ROWS-1][COLS-1] != " "){
+  canvas.height += CELL_H; 
+  ctx.font = '15px monospace';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  const newRow = Array(COLS).fill(' ');
+  grid.push(newRow);
+  ROWS++;
+  }
+
   shiftRight(cursor.row, cursor.col);
   grid[cursor.row][cursor.col] = char;
   moveCursor(1, 0);
-   moveRightWordToNextRowWhitespace()
+  
+  moveRightWordToNextRowWhitespace()
 }
 
 
