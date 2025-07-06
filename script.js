@@ -1,5 +1,5 @@
 // script.js
-
+// TEXTBOX CODE - ChatGPT : Canvas Text Grid Cursor
 // === Setup and center canvas on screen ===
 const canvas = document.createElement('canvas');
 document.body.style.margin = '0';
@@ -137,6 +137,13 @@ function moveCursor(dx, dy) {
 }
 
 
+function insertChar(char) {
+  shiftRight(cursor.row, cursor.col);
+  grid[cursor.row][cursor.col] = char;
+  moveCursor(1, 0);
+}
+
+
 //COLS represents the total number of columns in the grid. 
 //ROWS represents the total number of rows in the grid. 
 //DASH :
@@ -194,6 +201,14 @@ function shiftRight(row, col) {
   grid[lastR][lastC] = DASH;
 }
 
+
+function deleteChar() {
+  if (cursor.row === 0 && cursor.col === 0) return;
+  moveCursor(-1, 0);
+  shiftLeft(cursor.row, cursor.col);
+}
+
+
 // === Shift all characters left to fill the gap after deletion ===
 //COLS represents the total number of columns in the grid. 
 //DASH :
@@ -250,4 +265,60 @@ function shiftLeft(row, col) {
   const lastR = Math.floor(lastIndex / COLS); // Last row
   const lastC = lastIndex % COLS;             // Last column
   grid[lastR][lastC] = DASH;
+}
+
+//added to text box
+
+function moveWordDownIfPossible(grid, ROWS, COLS) {
+  // Helper to check if a character is a letter
+  const isLetter = ch => /^[a-zA-Z]$/.test(ch);
+
+  // Loop through each row except the last one
+  for (let row = 0; row < ROWS - 1; row++) {
+    let col = 0;
+
+    // Scan from left to right in the current row
+    while (col < COLS) {
+      // Skip non-letter cells
+      if (!isLetter(grid[row][col])) {
+        col++;
+        continue;
+      }
+
+      // Found the start of a word
+      let startCol = col;
+
+      // Keep moving right as long as letters continue
+      while (col < COLS && isLetter(grid[row][col])) {
+        col++;
+      }
+
+      // End column of the word is one before the current col
+      let endCol = col - 1;
+      let wordLen = endCol - startCol + 1;
+
+      // Check if the word reaches the right edge
+      let wordTouchesRightEdge = (endCol === COLS - 1);
+
+      // Or if it's a single character at the last column
+      let singleCharAtEnd = (startCol === endCol && endCol === COLS - 1);
+
+      // If it's a qualifying word
+      if (wordTouchesRightEdge || singleCharAtEnd) {
+        // Check if the next row starts with a letter (not empty)
+        if (isLetter(grid[row + 1][0])) {
+          // Move the word to the start of the next row
+          for (let i = 0; i < wordLen; i++) {
+            grid[row + 1][i] = grid[row][startCol + i]; // Copy to next row
+            grid[row][startCol + i] = '-'; // Replace with dashes above
+          }
+        }
+
+        // Once a word has been processed, stop scanning this row
+        break;
+      }
+
+      // If the word does not meet the criteria, continue scanning from next col
+    }
+  }
 }
