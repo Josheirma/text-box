@@ -25,10 +25,84 @@ const CELL_W = 12;
 const CELL_H = 19;
 const CURSOR_H = 2;
 const CHAR_ABOVE_CURSOR = 1; // chars 1px above cursor underline
-const DASH = '-';
+const DASH = '';
 
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(DASH));
 let cursor = { row: 0, col: 0 };
+
+
+/////PUSH ALL WRAPPED TEXT - all here except calls to :  moveAllEdgeWordsDown()
+
+
+// function moveEdgeWordDownIfShorterThanRow() {
+//   for (let row = 0; row < ROWS - 1; row++) {
+//     for (let col = 0; col < COLS; col++) {
+//       if (!isAlpha(grid[row][col])) continue;
+
+//       const startCol = col;
+//       let word = '';
+
+//       // Collect the consecutive word
+//       while (col < COLS && isAlpha(grid[row][col])) {
+//         word += grid[row][col];
+//         col++;
+//       }
+
+//       const wordLen = word.length;
+//       const endsAtRightEdge = col === COLS;
+//       const singleCharAtEnd = (startCol === COLS - 1 && wordLen === 1);
+
+//       if ((endsAtRightEdge || singleCharAtEnd) && wordLen > 0) {
+//         if (wordLen >= COLS) continue; // word too long, skip
+
+//         const nextRow = row + 1;
+//         if (isAlpha(grid[nextRow][0])) {
+//           // Insert word into next row (shift right)
+//           for (let i = wordLen - 1; i >= 0; i--) {
+//             shiftRight(nextRow, 0);
+//             grid[nextRow][0] = word[i];
+//           }
+
+//           // Replace original word with dashes
+//           for (let i = 0; i < wordLen; i++) {
+//             const c = startCol + i;
+//             if (c < COLS) grid[row][c] = DASH;
+//           }
+
+//           return; // Exit after one transformation
+//         }
+//       }
+
+//       col = startCol; // reset for next scan
+//     }
+//   }
+// }
+
+// function isAlpha(ch) {
+//   //return /^[a-zA-Z]$/.test(ch);
+//   return /^.$/.test(ch);
+// }
+
+// function shiftRight(row, fromCol) {
+//   for (let c = COLS - 1; c > fromCol; c--) {
+//     grid[row][c] = grid[row][c - 1];
+//   }
+//   grid[row][fromCol] = DASH;
+// }
+
+
+// function moveAllEdgeWordsDown() {
+//   while (true) {
+//     const before = JSON.stringify(grid);
+//     moveEdgeWordDownIfShorterThanRow();
+//     const after = JSON.stringify(grid);
+//     if (before === after) break;
+//   }
+// }
+
+
+
+/////
 
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -59,6 +133,11 @@ function drawGrid() {
   }
 }
 
+
+
+
+
+
 drawGrid();
 
 document.addEventListener('keydown', e => {
@@ -67,29 +146,53 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowUp') moveCursor(0, -1);
   else if (e.key === 'ArrowDown') moveCursor(0, 1);
   else if (e.key === 'Backspace') deleteChar();
+  else if (e.key === 'Delete') deleteChar();
   else if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) insertChar(e.key);
+ 
 
   drawGrid();
 });
 
 function moveCursor(dx, dy) {
-  cursor.col += dx;
-
-  if (cursor.col < 0) cursor.col = 0;
-  else if (cursor.col >= COLS) {
-    cursor.col = 0;
-    cursor.row = (cursor.row + 1) % ROWS;
+  if (dx === -1) {
+    // Left
+    if (cursor.col === 0) {
+      cursor.col = COLS - 1;
+    } else {
+      cursor.col -= 1;
+    }
+  } else if (dx === 1) {
+    // Right
+    if (cursor.col === COLS - 1) {
+      cursor.col = 0;
+    } else {
+      cursor.col += 1;
+    }
   }
 
-  cursor.row += dy;
-  if (cursor.row < 0) cursor.row = ROWS - 1;
-  else if (cursor.row >= ROWS) cursor.row = 0;
+  if (dy === -1) {
+    // Up
+    if (cursor.row === 0) {
+      cursor.row = ROWS - 1;
+    } else {
+      cursor.row -= 1;
+    }
+  } else if (dy === 1) {
+    // Down
+    if (cursor.row === ROWS - 1) {
+      cursor.row = 0;
+    } else {
+      cursor.row += 1;
+    }
+  }
 }
 
 function insertChar(char) {
   shiftRight(cursor.row, cursor.col);
   grid[cursor.row][cursor.col] = char;
   moveCursor(1, 0);
+  //moveAllEdgeWordsDown()
+  
 }
 
 function shiftRight(row, col) {
@@ -129,29 +232,29 @@ function shiftLeft(row, col) {
   grid[lastR][lastC] = DASH;
 }
 
-// Checks if char is a letter
-function isAlpha(ch) {
-  return /^[a-zA-Z]$/.test(ch);
-}
+// // Checks if char is a letter
+// function isAlpha(ch) {
+//   return /^[a-zA-Z]$/.test(ch);
+// }
 
-/**
- * Get word starting at (row,col) spanning row edges.
- * Returns word string or null.
- */
-function getWordAt(row, col) {
-  if (!isAlpha(grid[row][col])) return null;
-  let word = '';
-  let r = row;
-  let c = col;
-  while (r < ROWS) {
-    while (c < COLS) {
-      const ch = grid[r][c];
-      if (!isAlpha(ch)) return word.length ? word : null;
-      word += ch;
-      c++;
-    }
-    r++;
-    c = 0;
-  }
-  return word.length ? word : null;
-}
+// /**
+//  * Get word starting at (row,col) spanning row edges.
+//  * Returns word string or null.
+//  */
+// function getWordAt(row, col) {
+//   if (!isAlpha(grid[row][col])) return null;
+//   let word = '';
+//   let r = row;
+//   let c = col;
+//   while (r < ROWS) {
+//     while (c < COLS) {
+//       const ch = grid[r][c];
+//       if (!isAlpha(ch)) return word.length ? word : null;
+//       word += ch;
+//       c++;
+//     }
+//     r++;
+//     c = 0;
+//   }
+//   return word.length ? word : null;
+// }
