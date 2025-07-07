@@ -99,6 +99,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowDown') moveCursor(0, 1);
   else if (e.key === 'Backspace') deleteChar();
   else if (e.key === 'Delete') deleteChar();
+  else if (e.key === 'Enter') insertRowBreak();
   // All letter characters
   else if (e.key.length === 1 && /^[\x20-\x7E]$/.test(e.key)) insertChar(e.key); // Letters only
 
@@ -388,3 +389,44 @@ function moveRightWordToNextRowWhitespace() {
 }
 
 //////////////////////
+
+/////////Pressed Enter///////
+
+function insertRowBreak() {
+  
+  /////added:
+  canvas.height += CELL_H; 
+  ctx.font = '15px monospace';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  const newRow = Array(COLS).fill(' ');
+  grid.push(newRow);
+  ROWS++;
+  /////
+
+  const row = cursor.row;
+  const col = cursor.col;
+  const nextRow = (row + 1) % ROWS;
+
+  // Extract text from cursor to end of row
+  //last part of row
+  const tail = grid[row].slice(col);
+  const blanked = Array(COLS - col).fill(' ');
+  grid[row].splice(col, tail.length, ...blanked);
+
+  // Shift all rows below down by one
+  for (let r = ROWS - 2; r >= nextRow; r--) {
+    grid[r + 1] = [...grid[r]];
+  }
+  // Insert tail as new row
+  grid[nextRow] = Array(COLS).fill(DASH);
+  grid[nextRow].splice(0, tail.length, ...tail);
+
+  cursor.row = nextRow;
+  cursor.col = 0;
+}
+
+
+
+
+////////////////////

@@ -32,7 +32,7 @@ insert the consecutive word to the left of the next row and put dashes on row ab
 
 
 
-PUSH TEXT TO NEXT ROW IF ROOM WITH NO INSERTING:
+PUSH TEXT TO NEXT ROW IF ROOM WITH NO INSERTING: (chatGPT: Word Wrapping Algorithm)
 
 Start at the leftmost character (col = 0) and check if there's a consecutive word (letters only) that reaches the right edge or there is only one character at last character and a left most character on next row. 
 
@@ -45,6 +45,12 @@ If there is a consecutive word and its length is less than the consecutive space
 insert the row's rightmost word in to the next row so that it only inserts into whitespace after next row's left most consecutive characters.
  
 make great comments
+
+
+ENTER: (chatGPT: Canvas Text Grid Cursor)
+
+if enter is pressed, text at cursor to the right most character is inserted between row and next row.  The rest of the row is filled with spaces.
+
 
 */
 
