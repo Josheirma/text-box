@@ -57,6 +57,7 @@ function drawGrid() {
       // grid[24][24] is the character in the bottom-right cell.
       //
       // It is initialized as a ROWS × COLS array filled with empty cells (DASH).
+      //character
       const ch = grid[r][c];
       // Calculate horizontal center of the cell:
       // CELL_W is the width of each cell in pixels
@@ -304,6 +305,7 @@ function shiftLeft(row, col) {
   grid[lastR][lastC] = DASH;
 }
 
+
 //added to text box///////////////////////////
 
 function moveRightWordToNextRowWhitespace() {
@@ -313,7 +315,7 @@ function moveRightWordToNextRowWhitespace() {
   for (let row = 0; row < ROWS - 1; row++) {
     let col = 0;
 
-    // Step through each column of current row
+    // Step through each column of current row and finds start of possible word
     while (col < COLS) {
       // Skip over non-letter characters
       if (!isLetter(grid[row][col])) {
@@ -324,15 +326,18 @@ function moveRightWordToNextRowWhitespace() {
       const startCol = col;
 
       // Find the end of the current consecutive letter word
+      //finds end of that word
       while (col < COLS && isLetter(grid[row][col])) {
         col++;
       }
 
       const endCol = col - 1;
+      //this is a word, but is it last word
       const wordLen = endCol - startCol + 1;
 
       // === Check if the word qualifies for moving ===
       const endsAtRightEdge = endCol === COLS - 1;
+      //assuming if word found breaks out
       const isSingleAtEnd =
         startCol === endCol &&
         endCol === COLS - 1 &&
@@ -344,6 +349,7 @@ function moveRightWordToNextRowWhitespace() {
         continue;
       }
 
+      //got here, is a word with end on last row.
       // === Find where the leftmost block of non-space characters ends in the next row ===
       let leftBlockEnd = 0;
       while (leftBlockEnd < COLS && grid[row + 1][leftBlockEnd] !== ' ') {
@@ -365,16 +371,19 @@ function moveRightWordToNextRowWhitespace() {
       const canFit = wordLen <= spaceCount;
       const insertCol = leftBlockEnd;
 
-      // Ensure the entire target region is spaces only
-      let allSpaces = true;
-      for (let i = 0; i < wordLen; i++) {
-        if (grid[row + 1][insertCol + i] !== ' ') {
-          allSpaces = false;
-          break;
-        }
-      }
+      // // Ensure the entire target region is spaces only
+      // let allSpaces = true;
+      // for (let i = 0; i < wordLen; i++) {
+      //   if (grid[row + 1][insertCol + i] !== ' ') {
+      //     allSpaces = false;
+      //     break;
+      //   }
+      // }
 
-      if (nextRowStartsWithChar && canFit && allSpaces) {
+      
+
+      //if (nextRowStartsWithChar && canFit && allSpaces) {
+      if (nextRowStartsWithChar && canFit) {
         // === Perform the move ===
         for (let i = 0; i < wordLen; i++) {
           grid[row + 1][insertCol + i] = grid[row][startCol + i]; // move down
@@ -406,7 +415,9 @@ function insertRowBreak() {
 
   const row = cursor.row;
   const col = cursor.col;
-  const nextRow = (row + 1) % ROWS;
+  
+  //const nextRow = (row + 1) % ROWS;
+  const nextRow = row + 1;
 
   // Extract text from cursor to end of row
   //last part of row
